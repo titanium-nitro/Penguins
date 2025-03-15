@@ -3,82 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penguin Chat</title>
+    <title>Experimental Penguins</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        canvas { background: #cceeff; display: block; margin: auto; }
-        #chat { width: 300px; height: 150px; overflow-y: scroll; border: 1px solid black; margin: 10px auto; padding: 5px; background: white; }
-        #nameInput, #colorInput, #chatInput { margin: 5px; }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #87CEEB; /* Light sky blue background */
+        }
+        #gameContainer {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            background-color: #fff;
+            border: 2px solid #000;
+        }
+        #penguin {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background-image: url('penguin-sprite.png'); /* Replace with your sprite sheet */
+            background-size: contain;
+        }
+        #nameDisplay {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        #inputName {
+            padding: 5px;
+        }
+        #colorPicker {
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>Penguin Chat</h1>
-    <input type="text" id="nameInput" placeholder="Enter your name">
-    <input type="color" id="colorInput" value="#ff0000">
-    <button onclick="startGame()">Join</button>
-    
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="chat"></div>
-    <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="sendMessage(event)">
-    
+
+    <div id="gameContainer">
+        <div id="penguin"></div>
+        <div id="nameDisplay">Penguin</div>
+        <div id="controls">
+            <input type="text" id="inputName" placeholder="Enter your name" />
+            <input type="color" id="colorPicker" />
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
     <script>
-        const socket = new WebSocket('wss://penguin-server.example.com'); // Replace with actual WebSocket server URL
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let players = {};
-        let myId = null;
-        let myName = "";
-        let myColor = "#ff0000";
-        const penguinImg = new Image();
-        penguinImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAA..."; // Base64 penguin image
+        let penguin = document.getElementById('penguin');
+        let nameDisplay = document.getElementById('nameDisplay');
+        let penguinName = 'Penguin';
+        let penguinColor = '#000000'; // Default color
+        let walking = false;
+        let dancing = false;
 
-        function startGame() {
-            myName = document.getElementById('nameInput').value || "Penguin";
-            myColor = document.getElementById('colorInput').value;
-            socket.send(JSON.stringify({ type: 'join', name: myName, color: myColor }));
-        }
-
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'update') {
-                players = data.players;
-                drawGame();
-            } else if (data.type === 'id') {
-                myId = data.id;
-            } else if (data.type === 'chat') {
-                document.getElementById('chat').innerHTML += `<p><b>${data.name}:</b> ${data.message}</p>`;
-                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+        // Basic movement control
+        document.addEventListener('keydown', function(event) {
+            if (walking) {
+                let penguinRect = penguin.getBoundingClientRect();
+                if (event.key === 'ArrowLeft') {
+                    penguin.style.left = `${penguinRect.left - 10}px`;
+                } else if (event.key === 'ArrowRight') {
+                    penguin.style.left = `${penguinRect.left + 10}px`;
+                }
             }
-        };
-
-        function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let id in players) {
-                let p = players[id];
-                ctx.fillStyle = p.color;
-                ctx.drawImage(penguinImg, p.x - 20, p.y - 20, 40, 40);
-                ctx.fillStyle = "black";
-                ctx.fillText(p.name, p.x - 15, p.y - 30);
-            }
-        }
-
-        window.addEventListener("keydown", (e) => {
-            let move = { dx: 0, dy: 0 };
-            if (e.key === "ArrowUp") move.dy = -10;
-            if (e.key === "ArrowDown") move.dy = 10;
-            if (e.key === "ArrowLeft") move.dx = -10;
-            if (e.key === "ArrowRight") move.dx = 10;
-            socket.send(JSON.stringify({ type: 'move', ...move }));
         });
 
-        function sendMessage(event) {
-            if (event.key === "Enter") {
-                let message = document.getElementById('chatInput').value;
-                socket.send(JSON.stringify({ type: 'chat', name: myName, message }));
-                document.getElementById('chatInput').value = "";
+        // Start the game and change name and color
+        function startGame() {
+            let newName = document.getElementById('inputName').value.trim();
+            if (newName) {
+                penguinName = newName;
+            }
+            let newColor = document.getElementById('colorPicker').value;
+            penguinColor = newColor;
+
+            nameDisplay.innerText = penguinName;
+            penguin.style.backgroundColor = penguinColor;
+
+            document.getElementById('controls').style.display = 'none';
+            startWalking();
+        }
+
+        // Start the walking animation
+        function startWalking() {
+            walking = true;
+        }
+
+        // Toggle dancing animation
+        function toggleDance() {
+            dancing = !dancing;
+            if (dancing) {
+                penguin.style.animation = 'dance 1s infinite';
+            } else {
+                penguin.style.animation = 'none';
             }
         }
+
+        // Handle dancing key press (e.g., Space key)
+        document.addEventListener('keydown', function(event) {
+            if (event.key === ' ' && !walking) {
+                toggleDance();
+            }
+        });
     </script>
+    
+    <style>
+        @keyframes dance {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(10deg); }
+            100% { transform: rotate(0deg); }
+        }
+    </style>
 </body>
 </html>
 
