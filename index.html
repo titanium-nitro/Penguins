@@ -90,6 +90,9 @@
         let penguinColor = '#000000'; // Default color
         let walking = false;
         let dancing = false;
+        let destinationX = 0;
+        let destinationY = 0;
+        let moveSpeed = 3; // Speed of walking (pixels per frame)
 
         // Handle starting the game and setting name and color
         function startGame() {
@@ -107,21 +110,50 @@
             document.getElementById('talkInput').style.display = 'block';
         }
 
+        // Function to move penguin smoothly towards the clicked location
+        function movePenguin() {
+            // Get current position
+            let penguinRect = penguin.getBoundingClientRect();
+            let penguinX = penguinRect.left;
+            let penguinY = penguinRect.top;
+
+            // Calculate direction to move
+            let deltaX = destinationX - penguinX;
+            let deltaY = destinationY - penguinY;
+
+            // If penguin is close enough to the destination, stop moving
+            if (Math.abs(deltaX) < moveSpeed && Math.abs(deltaY) < moveSpeed) {
+                penguin.style.left = `${destinationX}px`;
+                penguin.style.top = `${destinationY}px`;
+                return;
+            }
+
+            // Update penguin's position
+            let angle = Math.atan2(deltaY, deltaX);
+            let moveX = moveSpeed * Math.cos(angle);
+            let moveY = moveSpeed * Math.sin(angle);
+
+            penguin.style.left = `${penguinX + moveX}px`;
+            penguin.style.top = `${penguinY + moveY}px`;
+
+            requestAnimationFrame(movePenguin);
+        }
+
         // Move the penguin when clicking inside the game container
         document.getElementById('gameContainer').addEventListener('click', function(event) {
             let containerRect = event.target.getBoundingClientRect();
             let penguinRect = penguin.getBoundingClientRect();
 
-            // Calculate the new position, but make sure it's inside the game container limits
-            let newX = event.clientX - containerRect.left - penguinRect.width / 2;
-            let newY = event.clientY - containerRect.top - penguinRect.height / 2;
+            // Calculate the destination (clicked position), but make sure it's inside the game container limits
+            destinationX = event.clientX - containerRect.left - penguinRect.width / 2;
+            destinationY = event.clientY - containerRect.top - penguinRect.height / 2;
 
             // Limit the penguin's movement inside the container
-            newX = Math.max(0, Math.min(newX, containerRect.width - penguinRect.width));
-            newY = Math.max(0, Math.min(newY, containerRect.height - penguinRect.height));
+            destinationX = Math.max(0, Math.min(destinationX, containerRect.width - penguinRect.width));
+            destinationY = Math.max(0, Math.min(destinationY, containerRect.height - penguinRect.height));
 
-            penguin.style.left = `${newX}px`;
-            penguin.style.top = `${newY}px`;
+            // Start moving the penguin
+            movePenguin();
         });
 
         // Function to make the penguin "talk"
@@ -149,7 +181,7 @@
             }
         });
     </script>
-    
+
     <style>
         @keyframes dance {
             0% { transform: rotate(0deg); }
@@ -159,3 +191,4 @@
     </style>
 </body>
 </html>
+
