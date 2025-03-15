@@ -50,9 +50,6 @@
         #inputName {
             padding: 5px;
         }
-        #colorPicker {
-            padding: 5px;
-        }
         #talkInput {
             position: absolute;
             bottom: 40px;
@@ -65,6 +62,19 @@
         #talkButton {
             padding: 5px;
         }
+        .speechBubble {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #000;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -74,37 +84,32 @@
         <div id="nameDisplay">Penguin</div>
         <div id="controls">
             <input type="text" id="inputName" placeholder="Enter your name" />
-            <input type="color" id="colorPicker" />
             <button onclick="startGame()">Start Game</button>
         </div>
         <div id="talkInput">
             <input type="text" id="talkBox" placeholder="What do you want to say?" />
             <button id="talkButton" onclick="makeTalk()">Talk</button>
         </div>
+        <div class="speechBubble" id="speechBubble"></div>
     </div>
 
     <script>
         let penguin = document.getElementById('penguin');
         let nameDisplay = document.getElementById('nameDisplay');
         let penguinName = 'Penguin';
-        let penguinColor = '#000000'; // Default color
         let walking = false;
-        let dancing = false;
         let destinationX = 0;
         let destinationY = 0;
         let moveSpeed = 3; // Speed of walking (pixels per frame)
+        let speechBubble = document.getElementById('speechBubble');
 
-        // Handle starting the game and setting name and color
+        // Handle starting the game and setting name
         function startGame() {
             let newName = document.getElementById('inputName').value.trim();
             if (newName) {
                 penguinName = newName;
             }
-            let newColor = document.getElementById('colorPicker').value;
-            penguinColor = newColor;
-
             nameDisplay.innerText = penguinName;
-            penguin.style.backgroundColor = penguinColor;
 
             document.getElementById('controls').style.display = 'none';
             document.getElementById('talkInput').style.display = 'block';
@@ -160,35 +165,16 @@
         function makeTalk() {
             let message = document.getElementById('talkBox').value.trim();
             if (message) {
-                alert(`${penguinName} says: "${message}"`);
+                speechBubble.innerText = `${penguinName} says: "${message}"`;
+                speechBubble.style.display = 'block'; // Show the speech bubble
             }
         }
 
-        // Handle dancing: toggle on/off when Space key is pressed
-        function toggleDance() {
-            dancing = !dancing;
-            if (dancing) {
-                penguin.style.animation = 'dance 1s infinite';
-            } else {
-                penguin.style.animation = 'none';
-            }
-        }
+        // Optionally, clear the speech bubble after a few seconds
+        setInterval(function() {
+            speechBubble.style.display = 'none';
+        }, 5000); // Hide the speech bubble after 5 seconds
 
-        // Handle dancing key press (e.g., Space key)
-        document.addEventListener('keydown', function(event) {
-            if (event.key === ' ' && !walking) {
-                toggleDance();
-            }
-        });
     </script>
-
-    <style>
-        @keyframes dance {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(10deg); }
-            100% { transform: rotate(0deg); }
-        }
-    </style>
 </body>
 </html>
-
