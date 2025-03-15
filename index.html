@@ -7,7 +7,7 @@
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
         canvas { background: #cceeff; display: block; margin: auto; }
-        #chat { width: 300px; height: 100px; overflow-y: scroll; border: 1px solid black; margin: 10px auto; padding: 5px; }
+        #chat { width: 300px; height: 150px; overflow-y: scroll; border: 1px solid black; margin: 10px auto; padding: 5px; background: white; }
         #nameInput, #colorInput, #chatInput { margin: 5px; }
     </style>
 </head>
@@ -22,13 +22,15 @@
     <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="sendMessage(event)">
     
     <script>
-        const socket = new WebSocket('wss://your-server.com'); // Replace with your WebSocket server URL
+        const socket = new WebSocket('wss://penguin-server.example.com'); // Replace with actual WebSocket server URL
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let players = {};
         let myId = null;
         let myName = "";
         let myColor = "#ff0000";
+        const penguinImg = new Image();
+        penguinImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAA..."; // Base64 penguin image
 
         function startGame() {
             myName = document.getElementById('nameInput').value || "Penguin";
@@ -45,6 +47,7 @@
                 myId = data.id;
             } else if (data.type === 'chat') {
                 document.getElementById('chat').innerHTML += `<p><b>${data.name}:</b> ${data.message}</p>`;
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             }
         };
 
@@ -53,22 +56,19 @@
             for (let id in players) {
                 let p = players[id];
                 ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.drawImage(penguinImg, p.x - 20, p.y - 20, 40, 40);
                 ctx.fillStyle = "black";
-                ctx.fillText(p.name, p.x - 15, p.y - 25);
+                ctx.fillText(p.name, p.x - 15, p.y - 30);
             }
         }
 
         window.addEventListener("keydown", (e) => {
-            let move = { id: myId, type: 'move', dx: 0, dy: 0 };
+            let move = { dx: 0, dy: 0 };
             if (e.key === "ArrowUp") move.dy = -10;
             if (e.key === "ArrowDown") move.dy = 10;
             if (e.key === "ArrowLeft") move.dx = -10;
             if (e.key === "ArrowRight") move.dx = 10;
-            if (e.key === "d") move.dance = true;
-            socket.send(JSON.stringify(move));
+            socket.send(JSON.stringify({ type: 'move', ...move }));
         });
 
         function sendMessage(event) {
@@ -81,3 +81,4 @@
     </script>
 </body>
 </html>
+
