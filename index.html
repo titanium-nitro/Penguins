@@ -53,6 +53,18 @@
         #colorPicker {
             padding: 5px;
         }
+        #talkInput {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            padding: 5px;
+        }
+        #talkButton {
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
@@ -65,6 +77,10 @@
             <input type="color" id="colorPicker" />
             <button onclick="startGame()">Start Game</button>
         </div>
+        <div id="talkInput">
+            <input type="text" id="talkBox" placeholder="What do you want to say?" />
+            <button id="talkButton" onclick="makeTalk()">Talk</button>
+        </div>
     </div>
 
     <script>
@@ -75,19 +91,7 @@
         let walking = false;
         let dancing = false;
 
-        // Basic movement control
-        document.addEventListener('keydown', function(event) {
-            if (walking) {
-                let penguinRect = penguin.getBoundingClientRect();
-                if (event.key === 'ArrowLeft') {
-                    penguin.style.left = `${penguinRect.left - 10}px`;
-                } else if (event.key === 'ArrowRight') {
-                    penguin.style.left = `${penguinRect.left + 10}px`;
-                }
-            }
-        });
-
-        // Start the game and change name and color
+        // Handle starting the game and setting name and color
         function startGame() {
             let newName = document.getElementById('inputName').value.trim();
             if (newName) {
@@ -100,15 +104,35 @@
             penguin.style.backgroundColor = penguinColor;
 
             document.getElementById('controls').style.display = 'none';
-            startWalking();
+            document.getElementById('talkInput').style.display = 'block';
         }
 
-        // Start the walking animation
-        function startWalking() {
-            walking = true;
+        // Move the penguin when clicking inside the game container
+        document.getElementById('gameContainer').addEventListener('click', function(event) {
+            let containerRect = event.target.getBoundingClientRect();
+            let penguinRect = penguin.getBoundingClientRect();
+
+            // Calculate the new position, but make sure it's inside the game container limits
+            let newX = event.clientX - containerRect.left - penguinRect.width / 2;
+            let newY = event.clientY - containerRect.top - penguinRect.height / 2;
+
+            // Limit the penguin's movement inside the container
+            newX = Math.max(0, Math.min(newX, containerRect.width - penguinRect.width));
+            newY = Math.max(0, Math.min(newY, containerRect.height - penguinRect.height));
+
+            penguin.style.left = `${newX}px`;
+            penguin.style.top = `${newY}px`;
+        });
+
+        // Function to make the penguin "talk"
+        function makeTalk() {
+            let message = document.getElementById('talkBox').value.trim();
+            if (message) {
+                alert(`${penguinName} says: "${message}"`);
+            }
         }
 
-        // Toggle dancing animation
+        // Handle dancing: toggle on/off when Space key is pressed
         function toggleDance() {
             dancing = !dancing;
             if (dancing) {
@@ -135,4 +159,3 @@
     </style>
 </body>
 </html>
-
