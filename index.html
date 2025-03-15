@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penguin Chat</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { background: #cceeff; display: block; margin: auto; }
+        #chat { width: 300px; height: 100px; overflow-y: scroll; border: 1px solid black; margin: 10px auto; padding: 5px; }
+        #nameInput, #colorInput, #chatInput { margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Penguin Chat</h1>
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <input type="color" id="colorInput" value="#ff0000">
+    <button onclick="startGame()">Join</button>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="chat"></div>
+    <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="sendMessage(event)">
+    
+    <script>
+        const socket = new WebSocket('wss://your-server.com'); // Replace with your WebSocket server URL
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let players = {};
+        let myId = null;
+        let myName = "";
+        let myColor = "#ff0000";
+
+        function startGame() {
+            myName = document.getElementById('nameInput').value || "Penguin";
+            myColor = document.getElementById('colorInput').value;
+            socket.send(JSON.stringify({ type: 'join', name: myName, color: myColor }));
+        }
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'update') {
+                players = data.players;
+                drawGame();
+            } else if (data.type === 'id') {
+                myId = data.id;
+            } else if (data.type === 'chat') {
+                document.getElementById('chat').innerHTML += `<p><b>${data.name}:</b> ${data.message}</p>`;
+            }
+        };
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let id in players) {
+                let p = players[id];
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "black";
+                ctx.fillText(p.name, p.x - 15, p.y - 25);
+            }
+        }
+
+        window.addEventListener("keydown", (e) => {
+            let move = { id: myId, type: 'move', dx: 0, dy: 0 };
+            if (e.key === "ArrowUp") move.dy = -10;
+            if (e.key === "ArrowDown") move.dy = 10;
+            if (e.key === "ArrowLeft") move.dx = -10;
+            if (e.key === "ArrowRight") move.dx = 10;
+            if (e.key === "d") move.dance = true;
+            socket.send(JSON.stringify(move));
+        });
+
+        function sendMessage(event) {
+            if (event.key === "Enter") {
+                let message = document.getElementById('chatInput').value;
+                socket.send(JSON.stringify({ type: 'chat', name: myName, message }));
+                document.getElementById('chatInput').value = "";
+            }
+        }
+    </script>
+</body>
+</html>
