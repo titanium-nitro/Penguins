@@ -117,7 +117,7 @@
 
         // Function to move penguin smoothly towards the clicked location
         function movePenguin() {
-            // Get current position
+            // Get current position of penguin
             let penguinRect = penguin.getBoundingClientRect();
             let penguinX = penguinRect.left;
             let penguinY = penguinRect.top;
@@ -138,8 +138,29 @@
             let moveX = moveSpeed * Math.cos(angle);
             let moveY = moveSpeed * Math.sin(angle);
 
-            penguin.style.left = `${penguinX + moveX}px`;
-            penguin.style.top = `${penguinY + moveY}px`;
+            // Make sure penguin doesn't go out of bounds
+            let newX = penguinX + moveX;
+            let newY = penguinY + moveY;
+
+            // Get the container's boundaries
+            let containerRect = document.getElementById('gameContainer').getBoundingClientRect();
+
+            // Prevent penguin from going outside the container by restricting its movement
+            if (newX < containerRect.left) {
+                newX = containerRect.left;
+            }
+            if (newX + penguinRect.width > containerRect.right) {
+                newX = containerRect.right - penguinRect.width;
+            }
+            if (newY < containerRect.top) {
+                newY = containerRect.top;
+            }
+            if (newY + penguinRect.height > containerRect.bottom) {
+                newY = containerRect.bottom - penguinRect.height;
+            }
+
+            penguin.style.left = `${newX - containerRect.left}px`;
+            penguin.style.top = `${newY - containerRect.top}px`;
 
             requestAnimationFrame(movePenguin);
         }
@@ -152,10 +173,6 @@
             // Calculate the destination (clicked position), but make sure it's inside the game container limits
             destinationX = event.clientX - containerRect.left - penguinRect.width / 2;
             destinationY = event.clientY - containerRect.top - penguinRect.height / 2;
-
-            // Limit the penguin's movement inside the container
-            destinationX = Math.max(0, Math.min(destinationX, containerRect.width - penguinRect.width));
-            destinationY = Math.max(0, Math.min(destinationY, containerRect.height - penguinRect.height));
 
             // Start moving the penguin
             movePenguin();
