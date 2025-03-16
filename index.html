@@ -64,7 +64,7 @@
         }
         .speechBubble {
             position: absolute;
-            bottom: 70px;
+            bottom: 70px; /* Position the bubble above the penguin */
             left: 50%;
             transform: translateX(-50%);
             background-color: #fff;
@@ -73,7 +73,7 @@
             border: 1px solid #000;
             font-size: 14px;
             font-family: Arial, sans-serif;
-            display: none;
+            display: none; /* Hidden initially */
         }
     </style>
 </head>
@@ -97,10 +97,9 @@
         let penguin = document.getElementById('penguin');
         let nameDisplay = document.getElementById('nameDisplay');
         let penguinName = 'Penguin';
-        let walking = false;
         let destinationX = 0;
         let destinationY = 0;
-        let moveSpeed = 3; // Speed of walking (pixels per frame)
+        let moveSpeed = 1; // Slower speed for movement (pixels per frame)
         let speechBubble = document.getElementById('speechBubble');
 
         // Handle starting the game and setting name
@@ -115,7 +114,7 @@
             document.getElementById('talkInput').style.display = 'block';
         }
 
-        // Function to move penguin smoothly towards the clicked location
+        // Function to move penguin smoothly towards the clicked position
         function movePenguin() {
             // Get current position of penguin
             let penguinRect = penguin.getBoundingClientRect();
@@ -133,19 +132,19 @@
                 return;
             }
 
-            // Update penguin's position
+            // Update penguin's position with smaller steps (slower movement)
             let angle = Math.atan2(deltaY, deltaX);
             let moveX = moveSpeed * Math.cos(angle);
             let moveY = moveSpeed * Math.sin(angle);
-
-            // Make sure penguin doesn't go out of bounds
-            let newX = penguinX + moveX;
-            let newY = penguinY + moveY;
 
             // Get the container's boundaries
             let containerRect = document.getElementById('gameContainer').getBoundingClientRect();
 
             // Prevent penguin from going outside the container by restricting its movement
+            let newX = penguinX + moveX;
+            let newY = penguinY + moveY;
+
+            // Restrict movement within the game container
             if (newX < containerRect.left) {
                 newX = containerRect.left;
             }
@@ -162,7 +161,18 @@
             penguin.style.left = `${newX - containerRect.left}px`;
             penguin.style.top = `${newY - containerRect.top}px`;
 
+            // Position the speech bubble above the penguin
+            positionSpeechBubble(newX, newY);
+
+            // Continue the movement animation
             requestAnimationFrame(movePenguin);
+        }
+
+        // Position the speech bubble above the penguin
+        function positionSpeechBubble(penguinX, penguinY) {
+            let penguinRect = penguin.getBoundingClientRect();
+            speechBubble.style.left = `${penguinX + penguinRect.width / 2 - 25}px`; // Position it above the penguin's head
+            speechBubble.style.top = `${penguinY - 30}px`; // Adjust the vertical position to appear above
         }
 
         // Move the penguin when clicking inside the game container
@@ -170,7 +180,7 @@
             let containerRect = event.target.getBoundingClientRect();
             let penguinRect = penguin.getBoundingClientRect();
 
-            // Calculate the destination (clicked position), but make sure it's inside the game container limits
+            // Calculate the destination (clicked position), making sure it's inside the container
             destinationX = event.clientX - containerRect.left - penguinRect.width / 2;
             destinationY = event.clientY - containerRect.top - penguinRect.height / 2;
 
@@ -182,7 +192,7 @@
         function makeTalk() {
             let message = document.getElementById('talkBox').value.trim();
             if (message) {
-                speechBubble.innerText = `${penguinName} says: "${message}"`;
+                speechBubble.innerText = message; // Just show the message, no "Penguin says"
                 speechBubble.style.display = 'block'; // Show the speech bubble
             }
         }
